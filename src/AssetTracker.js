@@ -45,6 +45,15 @@ const coinUnitMap = {
             decimalPlaces: 8,
         },
     },
+    dot: {
+        monetary: {
+            unit: 'dot',
+        },
+        fractional: {
+            unit: 'planck',
+            decimalPlaces: 10,
+        },
+    },
     eth: {
         monetary: {
             unit: 'eth',
@@ -52,6 +61,15 @@ const coinUnitMap = {
         fractional: {
             unit: 'wei',
             decimalPlaces: 18,
+        },
+    },
+    ksm: {
+        monetary: {
+            unit: 'ksm',
+        },
+        fractional: {
+            unit: 'planck',
+            decimalPlaces: 12,
         },
     },
     ltc: {
@@ -63,13 +81,22 @@ const coinUnitMap = {
             decimalPlaces: 8,
         },
     },
+    xlm: {
+        monetary: {
+            unit: 'xlm',
+        },
+        fractional: {
+            unit: 'stroop',
+            decimalPlaces: 7,
+        },
+    },
     xrp: {
         monetary: {
             unit: 'xrp',
         },
         fractional: {
             unit: 'drop',
-            decimalPlaces: 8,
+            decimalPlaces: 6,
         },
     },
     zec: {
