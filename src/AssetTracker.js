@@ -54,9 +54,9 @@ const coinUnitMap = {
             decimalPlaces: 8,
         },
     },
-    celo: {
+    cgld: {
         monetary: {
-            unit: 'celo',
+            unit: 'cgld',
         },
         fractional: {
             unit: 'unknown',
