@@ -18,6 +18,24 @@ const dateSorter = (a, b) => (
 );
 
 const coinUnitMap = {
+    algo: {
+        monetary: {
+            unit: 'algo',
+        },
+        fractional: {
+            unit: 'unknown',
+            decimalPlaces: -1,
+        },
+    },
+    band: {
+        monetary: {
+            unit: 'band',
+        },
+        fractional: {
+            unit: 'unknown',
+            decimalPlaces: -1,
+        },
+    },
     bch: {
         monetary: {
             unit: 'bch',
@@ -34,6 +52,24 @@ const coinUnitMap = {
         fractional: {
             unit: 'satoshi',
             decimalPlaces: 8,
+        },
+    },
+    celo: {
+        monetary: {
+            unit: 'celo',
+        },
+        fractional: {
+            unit: 'unknown',
+            decimalPlaces: -1,
+        },
+    },
+    comp: {
+        monetary: {
+            unit: 'comp',
+        },
+        fractional: {
+            unit: 'unknown',
+            decimalPlaces: -1,
         },
     },
     dash: {
@@ -63,6 +99,15 @@ const coinUnitMap = {
             decimalPlaces: 18,
         },
     },
+    grt: {
+        monetary: {
+            unit: 'grt',
+        },
+        fractional: {
+            unit: 'unknown',
+            decimalPlaces: -1,
+        },
+    },
     ksm: {
         monetary: {
             unit: 'ksm',
@@ -79,6 +124,24 @@ const coinUnitMap = {
         fractional: {
             unit: 'litoshi',
             decimalPlaces: 8,
+        },
+    },
+    mkr: {
+        monetary: {
+            unit: 'mkr',
+        },
+        fractional: {
+            unit: 'unknown',
+            decimalPlaces: -1,
+        },
+    },
+    nu: {
+        monetary: {
+            unit: 'nu',
+        },
+        fractional: {
+            unit: 'unknown',
+            decimalPlaces: -1,
         },
     },
     xlm: {
@@ -134,7 +197,7 @@ export default class AssetTracker {
                     {
                         ...Object.fromEntries(quotes.filter(quote => ((quote.coin === asset) && (quote.date === date))).map(quote => [
                             quote.fiat,
-                            balance.times(BigNumber(quote.open.amount).plus(BigNumber(quote.close.amount)).dividedBy(BigNumber(2))).decimalPlaces(2).toNumber()
+                            balance.times(BigNumber(quote.open.amount).plus(BigNumber(quote.close.amount)).dividedBy(BigNumber(2))).decimalPlaces(2).toNumber() || BigNumber(0).toNumber()
                         ])),
                         [asset]: balance.toNumber(),
                     }

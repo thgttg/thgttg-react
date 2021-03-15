@@ -22,7 +22,8 @@ const colors = {
   btc: '#f7931a',
   dash: '#008ce7',
   dot: '#e71081',
-  eth: '#828384',
+  eth: '#444eec',
+  ksm: '#8015ab',
   ltc: '#345d9d',
   xlm: '#000000',
   xrp: '#23292f',
@@ -146,7 +147,7 @@ function App() {
                     <Legend />
                     {
                       assetTracker.assets.map(asset => (
-                        <Line yAxisId="left" type="monotone" dataKey={`${asset}.${currency}`} stroke={colors[asset] || '#82ca9d'} key={asset} />
+                        <Line yAxisId="left" type="monotone" dataKey={`${asset}.${currency}`} stroke={colors[asset] || '#cccccc'} key={asset} />
                       ))
                     }
                   </LineChart>
