@@ -134,7 +134,7 @@ export default class AssetTracker {
                     {
                         ...Object.fromEntries(quotes.filter(quote => ((quote.coin === asset) && (quote.date === date))).map(quote => [
                             quote.fiat,
-                            balance.times(BigNumber(quote.open.amount).plus(BigNumber(quote.close.amount)).dividedBy(BigNumber(2))).toNumber()
+                            balance.times(BigNumber(quote.open.amount).plus(BigNumber(quote.close.amount)).dividedBy(BigNumber(2))).decimalPlaces(2).toNumber()
                         ])),
                         [asset]: balance.toNumber(),
                     }
