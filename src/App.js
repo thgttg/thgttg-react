@@ -85,7 +85,7 @@ const CustomToolTip = props => {
 function App() {
   const [dateRange, setDateRange] = useState({ from: moment('2020-11-11').toISOString().slice(0, 10), to: moment().toISOString().slice(0, 10) });
   const [currency, setCurrency] = useState(cookies.get('currency') || 'eur');
-  const [gistId, setGistId] = useState(window.location.href.match(/#[a-f0-9]{32}$/) ? window.location.href.split('#').pop() : cookies.get('gist'));
+  const [gistId, setGistId] = useState(window.location.href.match(/#[a-f0-9]{32}$/) ? window.location.href.split('#').pop() : cookies.get('gist') || '8272a8540d65584f16a2d3f6b9c34e4c');
   const [assetTracker, setAssetTracker] = useState(undefined);
   useEffect(() => {
     if(!!currency && currency.match(/^[a-z]{3}$/) && cookies.get('currency') !== currency) {
