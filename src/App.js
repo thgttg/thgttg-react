@@ -136,18 +136,23 @@ function App() {
         {
           (!!assetTracker && !!assetTracker.balances.length)
             ? (
-                <ResponsiveContainer width="100%" minHeight="400px">
+                <ResponsiveContainer width="100%" minHeight="500px">
                   <LineChart
                     data={assetTracker.balances.filter(balance => moment(balance.date).isBetween(moment(dateRange.from), moment(dateRange.to)))}
                     margin={{ top: 50, right: 10, left: 10, bottom: 10 }} >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis yAxisId="left" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 11 }}
+                      tickFormatter={tick => moment(tick).format('MMM D').toLowerCase()} />
+                    <YAxis
+                      tick={{ fontSize: 11 }}
+                      tickFormatter={tick => new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(tick)} />
                     <Tooltip />
                     <Legend />
                     {
                       assetTracker.assets.map(asset => (
-                        <Line yAxisId="left" type="monotone" dataKey={`${asset}.${currency}`} stroke={colors[asset] || '#cccccc'} key={asset} />
+                        <Line type="monotone" name={`${asset}`} dataKey={`${asset}.${currency}`} dot={false} stroke={colors[asset] || '#cccccc'} key={asset} />
                       ))
                     }
                   </LineChart>
@@ -237,12 +242,12 @@ function App() {
                                 <span className="text-muted" style={{marginRight: '1em'}}>
                                   {balance[asset][asset]}
                                 </span>
-                                {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(balance[asset][currency])}
+                                {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(balance[asset][currency] || 0)}
                               </td>
                             ))
                           }
                           <td className="text-right">
-                            {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(assetTracker.assets.reduce((acc, asset) => acc + balance[asset][currency], 0))}
+                            {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(assetTracker.assets.reduce((acc, asset) => acc + (balance[asset][currency] || 0), 0))}
                           </td>
                         </tr>
                       ))

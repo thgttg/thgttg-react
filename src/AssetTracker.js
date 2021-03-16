@@ -54,9 +54,9 @@ const coinUnitMap = {
             decimalPlaces: 8,
         },
     },
-    cgld: {
+    celo: {
         monetary: {
-            unit: 'cgld',
+            unit: 'celo',
         },
         fractional: {
             unit: 'unknown',
@@ -188,6 +188,7 @@ export default class AssetTracker {
             { length: (((this.latestDate - this.earliestDate) / interval) + 1) },
             (v, i) => new Date(this.earliestDate.valueOf() + (interval * i)).toISOString().slice(0, 10)
         ).map(date => ({
+            // todo: filter out assets where balance is always zero
             ...Object.fromEntries(this.assets.map(asset => {
                 const close = new Date(date);
                 close.setHours(23, 59, 59);
