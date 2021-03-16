@@ -176,6 +176,7 @@ const coinUnitMap = {
 export default class AssetTracker {
     constructor(transactions, quotes) {
         this.quotes = quotes;
+        this.currencies = [...new Set(this.quotes.map(quote => quote.fiat))].sort();;
         this.transactions = transactions.sort(dateSorter);
         this.earliestDate = moment(this.transactions[0].date);
         this.latestDate = moment();
@@ -206,6 +207,17 @@ export default class AssetTracker {
             })),
             date,
         }));
+        const latestBalance = [...this.balances].pop();
+        this.latestBalance = this.assets
+          .filter(a => !!latestBalance[a][this.currencies[0]])
+          .map(a => ({
+            name: a,
+            value: {
+                [a]: latestBalance[a][a],
+                [this.currencies[0]]: latestBalance[a][this.currencies[0]],
+            }
+          }));
+        
     }
 
     static fromGist(gistId) {

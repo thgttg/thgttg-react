@@ -13,7 +13,7 @@ import Row from 'react-bootstrap/Row';
 import Table from 'react-bootstrap/Table';
 
 // recharts
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 import AssetTracker from './AssetTracker';
 
@@ -26,7 +26,7 @@ const colors = {
   eth: '#444eec',
   ksm: '#8015ab',
   ltc: '#345d9d',
-  xlm: '#000000',
+  xlm: '#14b6e7',
   xrp: '#23292f',
   zec: '#ecb244',
   default: '#cccccc',
@@ -46,7 +46,7 @@ const CustomToolTip = props => {
       <table style={{width: '100%'}}>
         <thead>
           <tr>
-            <th colspan="2">
+            <th colSpan="2">
               {moment(label).format("MMMM Do, YYYY").toLowerCase()}
             </th>
           </tr>
@@ -80,6 +80,27 @@ const CustomToolTip = props => {
   );
 };
 
+const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, fill, asset, currency }) => {
+  const RADIAN = Math.PI / 180;
+
+  const radiusForValueLabel = innerRadius + (outerRadius - innerRadius) * 1.5;
+  const xForValueLabel = cx + radiusForValueLabel * Math.cos(-midAngle * RADIAN);
+  const yForValueLabel = cy + radiusForValueLabel * Math.sin(-midAngle * RADIAN);
+
+  const radiusForPercentLabel = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const xForPercentLabel = cx + radiusForPercentLabel * Math.cos(-midAngle * RADIAN);
+  const yForPercentLabel = cy + radiusForPercentLabel * Math.sin(-midAngle * RADIAN);
+  return (
+    <>
+      <text x={xForValueLabel} y={yForValueLabel} fill={fill} textAnchor={xForValueLabel > cx ? 'start' : 'end'} dominantBaseline="central">
+        {`${asset.name} ${asset.value[asset.name]} (${new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(asset.value[currency])})`}
+      </text>
+      <text x={xForPercentLabel} y={yForPercentLabel} fill="white" textAnchor={xForPercentLabel > cx ? 'start' : 'end'} dominantBaseline="central">
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    </>
+  );
+};
 
 function getHistoricalValue(amount, asset, currency, date, quotes) {
   const quote = quotes.find(quote => ((quote.fiat === currency) && (quote.coin === asset) && (quote.date === date.slice(0, 10))));
@@ -188,39 +209,66 @@ function App() {
         </Form>
       </Navbar>
       <Row>
-        {
-          (!!assetTracker && !!assetTracker.balances.length)
-            ? (
-                <ResponsiveContainer width="100%" minHeight="500px">
-                  <LineChart
-                    data={assetTracker.balances.filter(balance => moment(balance.date).isBetween(moment(dateRange.from), moment(dateRange.to)))}
-                    margin={{ top: 50, right: 10, left: 10, bottom: 10 }} >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fontSize: 11 }}
-                      tickFormatter={tick => moment(tick).format('MMM D').toLowerCase()} />
-                    <YAxis
-                      tick={{ fontSize: 11 }}
-                      tickFormatter={tick => new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(tick)} />
-                    <Tooltip content={<CustomToolTip />} currency={currency} />
-                    <Legend />
-                    {
-                      assetTracker.assets.map(asset => (
-                        <Line type="monotone" name={`${asset}`} dataKey={`${asset}.${currency}`} dot={false} stroke={colors[asset] || colors['default']} key={asset} />
-                      ))
-                    }
-                  </LineChart>
-                </ResponsiveContainer>
-              )
-            : null
-        }
+        <Col sm={4}>
+          {
+            (!!assetTracker && !!assetTracker.latestBalance)
+              ? (
+                  <ResponsiveContainer width="100%" minHeight="500px">
+                    <PieChart>
+                      <Pie
+                        data={assetTracker.latestBalance}
+                        cx="50%"
+                        cy="50%"
+                        label={CustomPieLabel}
+                        outerRadius={80}
+                        dataKey={`value.${currency}`}>
+                        {
+                          assetTracker.latestBalance.map((item) => (
+                            <Cell key={item.name} fill={colors[item.name]} asset={{ name: item.name, value: { [currency]: item.value[currency], [item.name]: item.value[item.name] } }} currency={currency} />
+                          ))
+                        }
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                )
+              : null
+          }
+        </Col>
+        <Col sm={8}>
+          {
+            (!!assetTracker && !!assetTracker.balances.length)
+              ? (
+                  <ResponsiveContainer width="100%" minHeight="500px">
+                    <LineChart
+                      data={assetTracker.balances.filter(balance => moment(balance.date).isBetween(moment(dateRange.from), moment(dateRange.to)))}
+                      margin={{ top: 50, right: 10, left: 10, bottom: 10 }} >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="date"
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={tick => moment(tick).format('MMM D').toLowerCase()} />
+                      <YAxis
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={tick => new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(tick)} />
+                      <Tooltip content={<CustomToolTip />} currency={currency} />
+                      <Legend />
+                      {
+                        assetTracker.assets.map(asset => (
+                          <Line type="monotone" name={`${asset}`} dataKey={`${asset}.${currency}`} dot={false} stroke={colors[asset] || colors['default']} key={asset} />
+                        ))
+                      }
+                    </LineChart>
+                  </ResponsiveContainer>
+                )
+              : null
+          }
+        </Col>
       </Row>
       <Row>
         <Table striped bordered hover size="sm" variant="dark" style={{margin: '50px 10px 10px 10px'}}>
           <thead>
             <tr>
-              <th colspan="4" className="text-right">
+              <th colSpan="4" className="text-right">
                 transaction history
               </th>
             </tr>
@@ -274,7 +322,7 @@ function App() {
                 <Table striped bordered hover size="sm" variant="dark" style={{margin: '50px 10px 10px 10px'}}>
                   <thead>
                     <tr>
-                      <th colspan={(assetTracker.assets.length + 2)} className="text-right">
+                      <th colSpan={(assetTracker.assets.length + 2)} className="text-right">
                         balance history
                       </th>
                     </tr>
