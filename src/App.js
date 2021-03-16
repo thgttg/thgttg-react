@@ -108,7 +108,7 @@ function App() {
   return (
     <Container fluid>
       <Navbar bg="dark" variant="dark">
-        <Navbar.Brand href="#">don't panic</Navbar.Brand>
+        <Navbar.Brand href="#">don&rsquo;t panic</Navbar.Brand>
         <Nav className="mr-auto">
         </Nav>
         <Form inline>
