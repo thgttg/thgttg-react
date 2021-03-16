@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import BigNumber from "bignumber.js";
 import Cookies from 'universal-cookie';
 import moment from 'moment';
 
@@ -80,7 +81,10 @@ const CustomToolTip = props => {
 };
 
 
-
+function getHistoricalValue(amount, asset, currency, date, quotes) {
+  const quote = quotes.find(quote => ((quote.fiat === currency) && (quote.coin === asset) && (quote.date === date.slice(0, 10))));
+  return BigNumber(amount).times(BigNumber(quote.open.amount).plus(BigNumber(quote.close.amount)).dividedBy(BigNumber(2))).decimalPlaces(2).toNumber();
+}
 
 function App() {
   const [dateRange, setDateRange] = useState({ from: moment('2020-11-11').toISOString().slice(0, 10), to: moment().toISOString().slice(0, 10) });
@@ -227,11 +231,11 @@ function App() {
               <th>
                 note
               </th>
-              <th>
-                asset
+              <th className="text-right">
+                asset amount
               </th>
               <th className="text-right">
-                amount
+                {currency} amount
               </th>
             </tr>
           </thead>
@@ -246,11 +250,15 @@ function App() {
                       <td>
                         {tx.note}
                       </td>
-                      <td>
-                        {tx.asset}
+                      <td className="text-right">
+                        {tx.asset} {tx.amount}
                       </td>
                       <td className="text-right">
-                        {tx.amount}
+                        {
+                          new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(
+                            getHistoricalValue(tx.amount, tx.asset, currency, tx.date, assetTracker.quotes)
+                          )
+                        }
                       </td>
                     </tr>
                   ))
