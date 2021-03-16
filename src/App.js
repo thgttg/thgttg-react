@@ -28,7 +28,58 @@ const colors = {
   xlm: '#000000',
   xrp: '#23292f',
   zec: '#ecb244',
+  default: '#cccccc',
 };
+
+const CustomToolTip = props => {
+  const { active, payload, label, currency } = props;
+  if (!active || !payload) {
+    return null;
+  }
+  return (
+    <div style={{
+      backgroundColor: '#ffffff',
+      padding: '1em',
+      border: '1px solid #cccccc',
+    }}>
+      <table style={{width: '100%'}}>
+        <thead>
+          <tr>
+            <th colspan="2">
+              {moment(label).format("MMMM Do, YYYY").toLowerCase()}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            payload.filter(x => x.value > 0).map((item) => (
+              <tr key={item.name} style={{ color: (colors[item.name] || colors['default']) }}>
+                <td>
+                  {item.name}
+                </td>
+                <td className="text-right">
+                  {Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(item.value)}
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>
+              total
+            </td>
+            <td className="text-right">
+              {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(payload.reduce((acc, item) => acc + (item.value || 0), 0))}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  );
+};
+
+
 
 
 function App() {
@@ -67,7 +118,7 @@ function App() {
             className="mr-sm-2"
             size="sm"
             disabled={true}
-            value={dateRange.from}
+            value={dateRange.from /* todo: figure out why moment removes a day... */}
             onChange={
               (event) => {
                 const from = event.target.value;
@@ -85,7 +136,7 @@ function App() {
             className="mr-sm-2"
             size="sm"
             disabled={true}
-            value={dateRange.to}
+            defaultValue={moment(dateRange.to).toISOString().slice(0, 10)}
             onChange={
               (event) => {
                 const to = event.target.value;
@@ -148,11 +199,11 @@ function App() {
                     <YAxis
                       tick={{ fontSize: 11 }}
                       tickFormatter={tick => new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(tick)} />
-                    <Tooltip />
+                    <Tooltip content={<CustomToolTip />} currency={currency} />
                     <Legend />
                     {
                       assetTracker.assets.map(asset => (
-                        <Line type="monotone" name={`${asset}`} dataKey={`${asset}.${currency}`} dot={false} stroke={colors[asset] || '#cccccc'} key={asset} />
+                        <Line type="monotone" name={`${asset}`} dataKey={`${asset}.${currency}`} dot={false} stroke={colors[asset] || colors['default']} key={asset} />
                       ))
                     }
                   </LineChart>
