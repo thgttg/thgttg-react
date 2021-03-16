@@ -265,7 +265,7 @@ function App() {
         </Col>
       </Row>
       <Row>
-        <Table striped bordered hover size="sm" variant="dark" style={{margin: '50px 10px 10px 10px'}}>
+        <Table striped bordered hover size="sm" style={{margin: '50px 10px 10px 10px'}}>
           <thead>
             <tr>
               <th colSpan="4" className="text-right">
@@ -319,7 +319,7 @@ function App() {
         {
           (!!assetTracker && !!assetTracker.balances.length)
             ? (
-                <Table striped bordered hover size="sm" variant="dark" style={{margin: '50px 10px 10px 10px'}}>
+                <Table striped bordered hover size="sm" style={{margin: '50px 10px 10px 10px'}}>
                   <thead>
                     <tr>
                       <th colSpan={(assetTracker.assets.length + 2)} className="text-right">
