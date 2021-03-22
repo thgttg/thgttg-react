@@ -10,6 +10,7 @@ import Form from 'react-bootstrap/Form';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Row from 'react-bootstrap/Row';
+import Spinner from 'react-bootstrap/Spinner';
 import Table from 'react-bootstrap/Table';
 
 // recharts
@@ -83,17 +84,24 @@ const CustomToolTip = props => {
 const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, fill, asset, currency }) => {
   const RADIAN = Math.PI / 180;
 
-  const radiusForValueLabel = innerRadius + (outerRadius - innerRadius) * 1.5;
-  const xForValueLabel = cx + radiusForValueLabel * Math.cos(-midAngle * RADIAN);
-  const yForValueLabel = cy + radiusForValueLabel * Math.sin(-midAngle * RADIAN);
+  const radiusForCoinValueLabel = innerRadius + (outerRadius - innerRadius) * 1.5;
+  const xForCoinValueLabel = cx + radiusForCoinValueLabel * Math.cos(-midAngle * RADIAN);
+  const yForCoinValueLabel = cy + radiusForCoinValueLabel * Math.sin(-midAngle * RADIAN);
+
+  const radiusForFiatValueLabel = innerRadius + (outerRadius - innerRadius) * 1.2;
+  const xForFiatValueLabel = cx + radiusForFiatValueLabel * Math.cos(-midAngle * RADIAN);
+  const yForFiatValueLabel = cy + radiusForFiatValueLabel * Math.sin(-midAngle * RADIAN);
 
   const radiusForPercentLabel = innerRadius + (outerRadius - innerRadius) * 0.5;
   const xForPercentLabel = cx + radiusForPercentLabel * Math.cos(-midAngle * RADIAN);
   const yForPercentLabel = cy + radiusForPercentLabel * Math.sin(-midAngle * RADIAN);
   return (
     <>
-      <text x={xForValueLabel} y={yForValueLabel} fill={fill} textAnchor={xForValueLabel > cx ? 'start' : 'end'} dominantBaseline="central">
-        {`${asset.name} ${asset.value[asset.name]} (${new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(asset.value[currency])})`}
+      <text x={xForCoinValueLabel} y={yForCoinValueLabel} fill={fill} textAnchor={xForCoinValueLabel > cx ? 'start' : 'end'} dominantBaseline="central">
+        {asset.name} {asset.value[asset.name]}
+      </text>
+      <text x={xForFiatValueLabel} y={yForFiatValueLabel} fill={fill} textAnchor={xForFiatValueLabel > cx ? 'start' : 'end'} dominantBaseline="central">
+        ({new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(asset.value[currency])})
       </text>
       <text x={xForPercentLabel} y={yForPercentLabel} fill="white" textAnchor={xForPercentLabel > cx ? 'start' : 'end'} dominantBaseline="central">
         {`${(percent * 100).toFixed(0)}%`}
@@ -104,11 +112,15 @@ const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, i
 
 function getHistoricalValue(amount, asset, currency, date, quotes) {
   const quote = quotes.find(quote => ((quote.fiat === currency) && (quote.coin === asset) && (quote.date === date.slice(0, 10))));
+  if (!quote) {
+    console.error(`failed to find quote using args: amount: ${amount}, asset: ${asset}, currency: ${currency}, date: ${date}, quotes.length,: ${quotes.length}`);
+    return 0;
+  }
   return BigNumber(amount).times(BigNumber(quote.open.amount).plus(BigNumber(quote.close.amount)).dividedBy(BigNumber(2))).decimalPlaces(2).toNumber();
 }
 
 function App() {
-  const [dateRange, setDateRange] = useState({ from: moment('2020-11-11').toISOString().slice(0, 10), to: moment().toISOString().slice(0, 10) });
+  const [dateRange, setDateRange] = useState({ from: moment('2020-11-11').utcOffset(0).startOf('day'), to: moment().utcOffset(0).endOf('day') });
   const [currency, setCurrency] = useState(cookies.get('currency') || 'eur');
   const [gistId, setGistId] = useState(window.location.href.match(/#[a-f0-9]{32}$/) ? window.location.href.split('#').pop() : cookies.get('gist') || '8272a8540d65584f16a2d3f6b9c34e4c');
   const [assetTracker, setAssetTracker] = useState(undefined);
@@ -211,7 +223,7 @@ function App() {
       <Row>
         <Col sm={4}>
           {
-            (!!assetTracker && !!assetTracker.latestBalance)
+            (!!assetTracker && !!assetTracker.latestBalance.length)
               ? (
                   <ResponsiveContainer width="100%" minHeight="500px">
                     <PieChart>
@@ -231,7 +243,9 @@ function App() {
                     </PieChart>
                   </ResponsiveContainer>
                 )
-              : null
+              : (
+                  <Spinner animation="grow" />
+                )
           }
         </Col>
         <Col sm={8}>
@@ -240,7 +254,7 @@ function App() {
               ? (
                   <ResponsiveContainer width="100%" minHeight="500px">
                     <LineChart
-                      data={assetTracker.balances.filter(balance => moment(balance.date).isBetween(moment(dateRange.from), moment(dateRange.to)))}
+                      data={assetTracker.balances.filter(balance => moment(balance.date).isBetween(dateRange.from, dateRange.to))}
                       margin={{ top: 50, right: 10, left: 10, bottom: 10 }} >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis
@@ -260,7 +274,9 @@ function App() {
                     </LineChart>
                   </ResponsiveContainer>
                 )
-              : null
+              : (
+                  <Spinner animation="grow" />
+                )
           }
         </Col>
       </Row>
@@ -290,7 +306,7 @@ function App() {
           <tbody>
             {
               (!!assetTracker && !!assetTracker.transactions.length)
-                ? assetTracker.transactions.filter(transaction => moment(transaction.date).isBetween(moment(dateRange.from), moment(dateRange.to))).map((tx, key) => (
+                ? assetTracker.transactions.filter(transaction => moment(transaction.date).isBetween(dateRange.from, dateRange.to)).map((tx, key) => (
                     <tr key={key}>
                       <td>
                         {tx.date}
@@ -340,7 +356,7 @@ function App() {
                   </thead>
                   <tbody>
                     {
-                      assetTracker.balances.filter(balance => moment(balance.date).isBetween(moment(dateRange.from), moment(dateRange.to))).map((balance) => (
+                      assetTracker.balances.filter(balance => moment(balance.date).isBetween(dateRange.from, dateRange.to)).map((balance) => (
                         <tr key={balance.date}>
                           <th>{balance.date}</th>
                           {

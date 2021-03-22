@@ -178,22 +178,22 @@ export default class AssetTracker {
         this.quotes = quotes;
         this.currencies = [...new Set(this.quotes.map(quote => quote.fiat))].sort();;
         this.transactions = transactions.sort(dateSorter);
-        this.earliestDate = moment(this.transactions[0].date);
-        this.latestDate = moment();
+        this.earliestDate = moment(this.transactions[0].date).utcOffset(0).startOf('day').toISOString().slice(0, 10);
+        this.latestDate = moment().utcOffset(0).endOf('day').toISOString();
+        console.log(`earliest: ${this.earliestDate}, latest: ${this.latestDate}`);
         this.assets = [...new Set(this.transactions.map(tx => tx.asset))].sort();
         this.balanceAtDate = (asset, date) => this.transactions
-            .filter(tx => ((tx.asset === asset) && (moment(tx.date) <= date)))
+            .filter(tx => ((tx.asset === asset) && (moment(tx.date).utcOffset(0) <= date)))
             .reduce((accumulator, tx) => accumulator.plus(new BigNumber(tx.amount)), new BigNumber(0));
-        const interval = 1000 * 60 * 60 * 24; // one day
         this.balances = Array.from(
-            { length: (((this.latestDate - this.earliestDate) / interval) + 1) },
-            (v, i) => new Date(this.earliestDate.valueOf() + (interval * i)).toISOString().slice(0, 10)
+            {
+                length: ((moment(this.latestDate).startOf('day').diff(moment(this.earliestDate).startOf('day'), 'days')) + 1)
+            },
+            (v, i) => moment(this.earliestDate).startOf('day').add(i, 'days').toISOString().slice(0, 10)
         ).map(date => ({
             // todo: filter out assets where balance is always zero
             ...Object.fromEntries(this.assets.map(asset => {
-                const close = new Date(date);
-                close.setHours(23, 59, 59);
-                const balance = this.balanceAtDate(asset, close);
+                const balance = this.balanceAtDate(asset, moment(date).utcOffset(0).endOf('day'));
                 return [
                     asset,
                     {
@@ -208,6 +208,7 @@ export default class AssetTracker {
             date,
         }));
         const latestBalance = [...this.balances].pop();
+        //console.log(latestBalance);
         this.latestBalance = this.assets
           .filter(a => !!latestBalance[a][this.currencies[0]])
           .map(a => ({
@@ -231,8 +232,9 @@ export default class AssetTracker {
                         .reduce((accumulator, _transactions) => [...accumulator, ..._transactions])
                         .filter(_transaction => Object.keys(coinUnitMap).includes(_transaction.asset))
                         .sort(dateSorter);
-                    const earliestDate = transactions[0].date.slice(0, 10);
-                    const latestDate = moment().toISOString().slice(0, 10);
+                    const assets = [...new Set(transactions.map(tx => tx.asset))];
+                    const earliestDate = moment(transactions[0].date).utcOffset(0).startOf('day').toISOString().slice(0, 10);
+                    const latestDate = moment().utcOffset(0).endOf('day').toISOString().slice(0, 10);
                     appClient.auth
                         .loginWithCredential(new AnonymousCredential())
                         .then(() => {
@@ -243,7 +245,7 @@ export default class AssetTracker {
                                         $and: [
                                             {
                                                 coin: {
-                                                    $in: [...new Set(transactions.map(tx => tx.asset))]
+                                                    $in: assets
                                                 }
                                             },
                                             {
