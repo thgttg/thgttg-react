@@ -7,6 +7,7 @@ import moment from 'moment';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 import Form from 'react-bootstrap/Form';
+import Image from 'react-bootstrap/Image';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Row from 'react-bootstrap/Row';
@@ -17,6 +18,14 @@ import Table from 'react-bootstrap/Table';
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 import AssetTracker from './AssetTracker';
+
+// fontawesome
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { fas, faCaretUp, faCaretDown, faCircle } from '@fortawesome/free-solid-svg-icons';
+import { library } from '@fortawesome/fontawesome-svg-core';
+library.add(fas, faCaretDown);
+library.add(fas, faCaretUp);
+library.add(fas, faCircle);
 
 const cookies = new Cookies();
 const colors = {
@@ -68,7 +77,7 @@ const CustomToolTip = props => {
           }
         </tbody>
         <tfoot>
-          <tr style={{ color: colors.total }}>
+          <tr style={{ color: colors.total, borderBottom: `1px dashed ${colors.total}`, borderTop: `1px dashed ${colors.total}` }}>
             <th>
               total
             </th>
@@ -221,6 +230,78 @@ function App() {
           </Form.Control>
         </Form>
       </Navbar>
+      <Row>
+        {
+          (!!assetTracker && !!assetTracker.latestBalance.length)
+            ? (
+                <Table hover size="sm" style={{margin: '50px 10px 10px 10px'}}>
+                  <thead>
+                    <tr>
+                      <th>
+                      </th>
+                      {
+                        assetTracker.latestBalance.map((item) => (
+                          <th key={item.name} fill={colors[item.name]} colSpan="2" className="text-center">
+                            <Image src={`${item.name}.png`} alt={`${item.name} logo`} style={{height: '20px', width: '20px', marginRight: '1em'}} />
+                            {item.name}
+                          </th>
+                        ))
+                      }
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th>
+                        portfolio value
+                      </th>
+                      {
+                        assetTracker.latestBalance.map((item) => (
+                          <React.Fragment key={item.name}>
+                            <td
+                              className="text-right">
+                              {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(item.value[currency])}
+                            </td>
+                            <td
+                              style={{
+                                color: (item.change[currency].day > 0) ? 'green' : (item.change[currency].day < 0) ? 'red' : 'black'
+                              }}>
+                              <FontAwesomeIcon icon={["fas", (item.change[currency].day > 0) ? 'caret-up' : (item.change[currency].day < 0) ? 'caret-down' : 'circle']} />
+                              {item.change[currency].day.toFixed(2)}%
+                            </td>
+                          </React.Fragment>
+                        ))
+                      }
+                    </tr>
+                    <tr>
+                      <th>
+                        market price
+                      </th>
+                      {
+                        assetTracker.latestBalance.map((item) => (
+                          <React.Fragment key={item.name}>
+                            <td
+                              className="text-right">
+                              {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(assetTracker.todaysQuotes[item.name][currency].avg)}
+                            </td>
+                            <td
+                              style={{
+                                color: (assetTracker.todaysQuotes[item.name][currency].change > 0) ? 'green' : (assetTracker.todaysQuotes[item.name][currency].change < 0) ? 'red' : 'black'
+                              }}>
+                              <FontAwesomeIcon icon={["fas", (assetTracker.todaysQuotes[item.name][currency].change > 0) ? 'caret-up' : (assetTracker.todaysQuotes[item.name][currency].change < 0) ? 'caret-down' : 'circle']} />
+                              {assetTracker.todaysQuotes[item.name][currency].change.toFixed(2)}%
+                            </td>
+                          </React.Fragment>
+                        ))
+                      }
+                    </tr>
+                  </tbody>
+                </Table>
+              )
+            : (
+                <Spinner animation="grow" />
+              )
+        }
+      </Row>
       <Row>
         <Col sm={4}>
           {
