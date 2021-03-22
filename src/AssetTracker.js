@@ -175,13 +175,15 @@ const coinUnitMap = {
 
 export default class AssetTracker {
     constructor(transactions, quotes) {
+        const assets = [...new Set(transactions.map(tx => tx.asset))].sort();
+        const currencies = [...new Set(quotes.map(quote => quote.fiat))].sort();
+        this.assets = assets;
         this.quotes = quotes;
-        this.currencies = [...new Set(this.quotes.map(quote => quote.fiat))].sort();;
+        this.currencies = currencies;
         this.transactions = transactions.sort(dateSorter);
         this.earliestDate = moment(this.transactions[0].date).utcOffset(0).startOf('day').toISOString().slice(0, 10);
         this.latestDate = moment().utcOffset(0).endOf('day').toISOString();
         console.log(`earliest: ${this.earliestDate}, latest: ${this.latestDate}`);
-        this.assets = [...new Set(this.transactions.map(tx => tx.asset))].sort();
         this.balanceAtDate = (asset, date) => this.transactions
             .filter(tx => ((tx.asset === asset) && (moment(tx.date).utcOffset(0) <= date)))
             .reduce((accumulator, tx) => accumulator.plus(new BigNumber(tx.amount)), new BigNumber(0));
@@ -206,6 +208,12 @@ export default class AssetTracker {
                 ];
             })),
             date,
+        })).map(balance => ({
+            ...balance,
+            total: Object.fromEntries(currencies.map(currency => [
+                currency,
+                assets.reduce((acc, asset) => acc + (balance[asset][currency] || 0), 0)
+            ]))
         }));
         const latestBalance = [...this.balances].pop();
         //console.log(latestBalance);

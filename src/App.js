@@ -30,6 +30,7 @@ const colors = {
   xlm: '#14b6e7',
   xrp: '#23292f',
   zec: '#ecb244',
+  total: '#999999',
   default: '#cccccc',
 };
 
@@ -54,7 +55,7 @@ const CustomToolTip = props => {
         </thead>
         <tbody>
           {
-            payload.filter(x => x.value > 0).map((item) => (
+            payload.filter(x => x.name !== 'total' && x.value > 0).map((item) => (
               <tr key={item.name} style={{ color: (colors[item.name] || colors['default']) }}>
                 <td>
                   {item.name}
@@ -67,13 +68,13 @@ const CustomToolTip = props => {
           }
         </tbody>
         <tfoot>
-          <tr>
-            <td>
+          <tr style={{ color: colors.total }}>
+            <th>
               total
-            </td>
-            <td className="text-right">
-              {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(payload.reduce((acc, item) => acc + (item.value || 0), 0))}
-            </td>
+            </th>
+            <th className="text-right">
+              {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(payload.find((item) => item.name === 'total').value)}
+            </th>
           </tr>
         </tfoot>
       </table>
@@ -262,15 +263,23 @@ function App() {
                         tick={{ fontSize: 11 }}
                         tickFormatter={tick => moment(tick).format('MMM D').toLowerCase()} />
                       <YAxis
+                        yAxisId="left"
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={tick => new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(tick)} />
+                      <YAxis
+                        yAxisId="right"
+                        orientation="right"
+                        strokeDasharray="5 5"
                         tick={{ fontSize: 11 }}
                         tickFormatter={tick => new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(tick)} />
                       <Tooltip content={<CustomToolTip />} currency={currency} />
                       <Legend />
                       {
                         assetTracker.assets.map(asset => (
-                          <Line type="monotone" name={`${asset}`} dataKey={`${asset}.${currency}`} dot={false} stroke={colors[asset] || colors['default']} key={asset} />
+                          <Line  yAxisId="left" type="monotone" name={`${asset}`} dataKey={`${asset}.${currency}`} dot={false} stroke={colors[asset] || colors['default']} key={asset} />
                         ))
                       }
+                      <Line yAxisId="right" type="monotone" name={`total`} dataKey={`total.${currency}`} strokeDasharray="5 5" dot={false} stroke={colors['total']} />
                     </LineChart>
                   </ResponsiveContainer>
                 )
@@ -370,7 +379,7 @@ function App() {
                             ))
                           }
                           <td className="text-right">
-                            {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(assetTracker.assets.reduce((acc, asset) => acc + (balance[asset][currency] || 0), 0))}
+                            {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(balance.total[currency] || 0)}
                           </td>
                         </tr>
                       ))
