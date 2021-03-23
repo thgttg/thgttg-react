@@ -179,7 +179,7 @@ export default class AssetTracker {
         const currencies = [...new Set(quotes.map(quote => quote.fiat))].sort();
         this.assets = assets;
         this.quotes = quotes.map((quote) => {
-            const quoteYesterday = quotes.find(candidate => ((candidate.coin === quote.coin) && (candidate.fiat === quote.fiat) && (candidate.date === moment(quote.date).utcOffset(0).startOf('day').subtract(1, 'day').toISOString().slice(0, 10))))
+            const quoteYesterday = quotes.find(candidate => ((candidate.coin === quote.coin) && (candidate.fiat === quote.fiat) && (candidate.date === moment.utc(quote.date).startOf('day').subtract(1, 'day').toISOString().slice(0, 10))))
             const avgYesterday = (!!quoteYesterday) ? (BigNumber(quoteYesterday.open.amount).plus(BigNumber(quoteYesterday.close.amount)).dividedBy(BigNumber(2))).decimalPlaces(2).toNumber() : 0;
             const avgToday = (BigNumber(quote.open.amount).plus(BigNumber(quote.close.amount)).dividedBy(BigNumber(2))).decimalPlaces(2).toNumber();
             return {
@@ -192,18 +192,18 @@ export default class AssetTracker {
             asset,
             Object.fromEntries(currencies.map(currency => [
                 currency,
-                this.quotes.find(quote => ((quote.coin === asset) && (quote.fiat === currency) && (quote.date === moment().utcOffset(0).startOf('day').toISOString().slice(0, 10))))
+                this.quotes.find(quote => ((quote.coin === asset) && (quote.fiat === currency) && (quote.date === moment.utc().startOf('day').toISOString().slice(0, 10))))
             ]))
         ]));
         this.currencies = currencies;
         this.transactions = transactions.sort(dateSorter);
-        this.earliestDate = moment(this.transactions[0].date).utcOffset(0).startOf('day').toISOString().slice(0, 10);
-        this.latestDate = moment().utcOffset(0).endOf('day').toISOString();
+        this.earliestDate = moment.utc(this.transactions[0].date).startOf('day').toISOString().slice(0, 10);
+        this.latestDate = moment.utc().endOf('day').toISOString();
         console.log(`earliest: ${this.earliestDate}, latest: ${this.latestDate}`);
         this.quoteAtDate = (asset, currency, date) => this.quotes
             .find(quote => ((quote.coin === asset) && (quote.fiat === currency) && (quote.date === date)));
         this.balanceAtDate = (asset, date) => this.transactions
-            .filter(tx => ((tx.asset === asset) && (moment(tx.date).utcOffset(0) <= date)))
+            .filter(tx => ((tx.asset === asset) && (moment.utc(tx.date) <= date)))
             .reduce((accumulator, tx) => accumulator.plus(new BigNumber(tx.amount)), new BigNumber(0));
         this.balances = Array.from(
             {
@@ -213,7 +213,7 @@ export default class AssetTracker {
         ).map(date => ({
             // todo: filter out assets where balance is always zero
             ...Object.fromEntries(this.assets.map(asset => {
-                const balance = this.balanceAtDate(asset, moment(date).utcOffset(0).endOf('day'));
+                const balance = this.balanceAtDate(asset, moment.utc(date).endOf('day'));
                 return [
                     asset,
                     {
@@ -235,22 +235,19 @@ export default class AssetTracker {
         }));
         const latestBalance = [...this.balances].pop();
         const penultimateBalance = [...this.balances].slice(-2, -1)[0];
-        //console.log(latestBalance);
-        this.latestBalance = this.assets
-          .filter(a => !!latestBalance[a][this.currencies[0]])
-          .map(a => ({
-            name: a,
-            value: {
-                [a]: latestBalance[a][a],
-                [currencies[0]]: latestBalance[a][currencies[0]]
-            },
-            change: {
-                [this.currencies[0]]: {
-                    day: ((latestBalance[a][currencies[0]] - (penultimateBalance[a][currencies[0]] || 0)) / (penultimateBalance[a][currencies[0]] || 0) * 100)
+        this.latestBalance = Object.fromEntries([...assets, ...['total']].filter(asset => ((asset === 'total') || (!!latestBalance[asset][asset]))).map(asset => [
+            asset,
+            Object.fromEntries(currencies.map(currency => [
+                currency,
+                {
+                    amount: (asset !== 'total') ? latestBalance[asset][asset] : 0,
+                    value: latestBalance[asset][currency],
+                    change: {
+                        day: ((latestBalance[asset][currency] - (penultimateBalance[asset][currency] || 0)) / (penultimateBalance[asset][currency] || 0) * 100)
+                    }
                 }
-            }
-          }));
-        
+            ]))
+        ]));
     }
 
     static fromGist(gistId) {
@@ -265,8 +262,8 @@ export default class AssetTracker {
                         .filter(_transaction => Object.keys(coinUnitMap).includes(_transaction.asset))
                         .sort(dateSorter);
                     const assets = [...new Set(transactions.map(tx => tx.asset))];
-                    const earliestDate = moment(transactions[0].date).utcOffset(0).startOf('day').toISOString().slice(0, 10);
-                    const latestDate = moment().utcOffset(0).endOf('day').toISOString().slice(0, 10);
+                    const earliestDate = moment.utc(transactions[0].date).startOf('day').toISOString().slice(0, 10);
+                    const latestDate = moment.utc().endOf('day').toISOString().slice(0, 10);
                     appClient.auth
                         .loginWithCredential(new AnonymousCredential())
                         .then(() => {

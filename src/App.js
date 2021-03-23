@@ -91,7 +91,7 @@ const CustomToolTip = props => {
   );
 };
 
-const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, fill, asset, currency }) => {
+const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, fill, asset, currency, balance }) => {
   const RADIAN = Math.PI / 180;
 
   const radiusForCoinValueLabel = innerRadius + (outerRadius - innerRadius) * 1.5;
@@ -108,10 +108,10 @@ const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, i
   return (
     <>
       <text x={xForCoinValueLabel} y={yForCoinValueLabel} fill={fill} textAnchor={xForCoinValueLabel > cx ? 'start' : 'end'} dominantBaseline="central">
-        {asset.name} {asset.value[asset.name]}
+        {asset} {balance.amount}
       </text>
       <text x={xForFiatValueLabel} y={yForFiatValueLabel} fill={fill} textAnchor={xForFiatValueLabel > cx ? 'start' : 'end'} dominantBaseline="central">
-        ({new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(asset.value[currency])})
+        ({new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(balance.value)})
       </text>
       <text x={xForPercentLabel} y={yForPercentLabel} fill="white" textAnchor={xForPercentLabel > cx ? 'start' : 'end'} dominantBaseline="central">
         {`${(percent * 100).toFixed(0)}%`}
@@ -130,7 +130,7 @@ function getHistoricalValue(amount, asset, currency, date, quotes) {
 }
 
 function App() {
-  const [dateRange, setDateRange] = useState({ from: moment('2020-11-11').utcOffset(0).startOf('day'), to: moment().utcOffset(0).endOf('day') });
+  const [dateRange, setDateRange] = useState({ from: moment.utc('2020-11-11').startOf('day'), to: moment.utc().endOf('day') });
   const [currency, setCurrency] = useState(cookies.get('currency') || 'eur');
   const [gistId, setGistId] = useState(window.location.href.match(/#[a-f0-9]{32}$/) ? window.location.href.split('#').pop() : cookies.get('gist') || '8272a8540d65584f16a2d3f6b9c34e4c');
   const [assetTracker, setAssetTracker] = useState(undefined);
@@ -165,14 +165,14 @@ function App() {
             className="mr-sm-2"
             size="sm"
             disabled={true}
-            value={dateRange.from /* todo: figure out why moment removes a day... */}
+            value={moment.utc(dateRange.from).toISOString().slice(0, 10)}
             onChange={
               (event) => {
                 const from = event.target.value;
                 if (from.match(/^20[12][0-9]-[01][0-9]-[0123][0-9]$/)) {
                   setDateRange(_dateRange => ({
                     ..._dateRange,
-                    from
+                    from: moment.utc(from).startOf('day')
                   }));
                 }
               }
@@ -183,14 +183,14 @@ function App() {
             className="mr-sm-2"
             size="sm"
             disabled={true}
-            defaultValue={moment(dateRange.to).toISOString().slice(0, 10)}
+            defaultValue={moment.utc(dateRange.to).toISOString().slice(0, 10)}
             onChange={
               (event) => {
                 const to = event.target.value;
                 if (to.match(/^20[12][0-9]-[01][0-9]-[0123][0-9]$/)) {
                   setDateRange(_dateRange => ({
                     ..._dateRange,
-                    to
+                    to: moment.utc(to).endOf('day')
                   }));
                 }
               }
@@ -215,35 +215,40 @@ function App() {
             as="select"
             className="mr-sm-2"
             size="sm"
-            disabled={true}
             defaultValue={currency}
             onChange={
               (event) => {
                 const currency = event.target.value;
-                if (currency.match(/^[a-f]{3}$/)) {
+                if (currency.match(/^[a-z]{3}$/)) {
                   setCurrency(currency);
                 }
               }
             }>
             <option>eur</option>
+            <option>gbp</option>
             <option>usd</option>
           </Form.Control>
         </Form>
       </Navbar>
       <Row>
         {
-          (!!assetTracker && !!assetTracker.latestBalance.length)
+          (!!assetTracker && !!assetTracker.latestBalance)
             ? (
                 <Table hover size="sm" style={{margin: '50px 10px 10px 10px'}}>
                   <thead>
                     <tr>
-                      <th>
-                      </th>
+                      <td>
+                        portfolio total: <strong>{new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(assetTracker.latestBalance.total[currency].value)}</strong>
+                        <span style={{ marginLeft: '1em', color: (assetTracker.latestBalance.total[currency].change.day > 0) ? 'green' : (assetTracker.latestBalance.total[currency].change.day < 0) ? 'red' : 'black' }}>
+                          <FontAwesomeIcon icon={["fas", (assetTracker.latestBalance.total[currency].change.day > 0) ? 'caret-up' : (assetTracker.latestBalance.total[currency].change.day < 0) ? 'caret-down' : 'circle']} />
+                          {assetTracker.latestBalance.total[currency].change.day.toFixed(2)}%
+                        </span>
+                      </td>
                       {
-                        assetTracker.latestBalance.map((item) => (
-                          <th key={item.name} fill={colors[item.name]} colSpan="2" className="text-center">
-                            <Image src={`${item.name}.png`} alt={`${item.name} logo`} style={{height: '20px', width: '20px', marginRight: '1em'}} />
-                            {item.name}
+                        Object.keys(assetTracker.latestBalance).filter(asset => (asset !== 'total')).map(asset => (
+                          <th key={asset} fill={colors[asset]} colSpan="2" className="text-center">
+                            <Image src={`${asset}.png`} alt={`${asset} logo`} style={{height: '20px', width: '20px', marginRight: '1em'}} />
+                            {asset}
                           </th>
                         ))
                       }
@@ -255,18 +260,18 @@ function App() {
                         portfolio value
                       </th>
                       {
-                        assetTracker.latestBalance.map((item) => (
-                          <React.Fragment key={item.name}>
+                        Object.keys(assetTracker.latestBalance).filter(asset => (asset !== 'total')).map(asset => (
+                          <React.Fragment key={asset}>
                             <td
                               className="text-right">
-                              {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(item.value[currency])}
+                              {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(assetTracker.latestBalance[asset][currency].value)}
                             </td>
                             <td
                               style={{
-                                color: (item.change[currency].day > 0) ? 'green' : (item.change[currency].day < 0) ? 'red' : 'black'
+                                color: (assetTracker.latestBalance[asset][currency].change.day > 0) ? 'green' : (assetTracker.latestBalance[asset][currency].change.day < 0) ? 'red' : 'black'
                               }}>
-                              <FontAwesomeIcon icon={["fas", (item.change[currency].day > 0) ? 'caret-up' : (item.change[currency].day < 0) ? 'caret-down' : 'circle']} />
-                              {item.change[currency].day.toFixed(2)}%
+                              <FontAwesomeIcon icon={["fas", (assetTracker.latestBalance[asset][currency].change.day > 0) ? 'caret-up' : (assetTracker.latestBalance[asset][currency].change.day < 0) ? 'caret-down' : 'circle']} />
+                              {assetTracker.latestBalance[asset][currency].change.day.toFixed(2)}%
                             </td>
                           </React.Fragment>
                         ))
@@ -277,18 +282,18 @@ function App() {
                         market price
                       </th>
                       {
-                        assetTracker.latestBalance.map((item) => (
-                          <React.Fragment key={item.name}>
+                        Object.keys(assetTracker.latestBalance).filter(asset => (asset !== 'total')).map(asset => ( // using latest balance keys in order to filter out quotes for assets we hold no balance for
+                          <React.Fragment key={asset}>
                             <td
                               className="text-right">
-                              {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(assetTracker.todaysQuotes[item.name][currency].avg)}
+                              {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(assetTracker.todaysQuotes[asset][currency].avg)}
                             </td>
                             <td
                               style={{
-                                color: (assetTracker.todaysQuotes[item.name][currency].change > 0) ? 'green' : (assetTracker.todaysQuotes[item.name][currency].change < 0) ? 'red' : 'black'
+                                color: (assetTracker.todaysQuotes[asset][currency].change > 0) ? 'green' : (assetTracker.todaysQuotes[asset][currency].change < 0) ? 'red' : 'black'
                               }}>
-                              <FontAwesomeIcon icon={["fas", (assetTracker.todaysQuotes[item.name][currency].change > 0) ? 'caret-up' : (assetTracker.todaysQuotes[item.name][currency].change < 0) ? 'caret-down' : 'circle']} />
-                              {assetTracker.todaysQuotes[item.name][currency].change.toFixed(2)}%
+                              <FontAwesomeIcon icon={["fas", (assetTracker.todaysQuotes[asset][currency].change > 0) ? 'caret-up' : (assetTracker.todaysQuotes[asset][currency].change < 0) ? 'caret-down' : 'circle']} />
+                              {assetTracker.todaysQuotes[asset][currency].change.toFixed(2)}%
                             </td>
                           </React.Fragment>
                         ))
@@ -305,20 +310,25 @@ function App() {
       <Row>
         <Col sm={4}>
           {
-            (!!assetTracker && !!assetTracker.latestBalance.length)
+            (!!assetTracker && !!assetTracker.latestBalance)
               ? (
                   <ResponsiveContainer width="100%" minHeight="500px">
                     <PieChart>
                       <Pie
-                        data={assetTracker.latestBalance}
+                        data={Object.keys(assetTracker.latestBalance).filter(asset => (asset !== 'total')).map(asset => assetTracker.latestBalance[asset][currency])}
                         cx="50%"
                         cy="50%"
                         label={CustomPieLabel}
                         outerRadius={80}
-                        dataKey={`value.${currency}`}>
+                        dataKey="value">
                         {
-                          assetTracker.latestBalance.map((item) => (
-                            <Cell key={item.name} fill={colors[item.name]} asset={{ name: item.name, value: { [currency]: item.value[currency], [item.name]: item.value[item.name] } }} currency={currency} />
+                          Object.keys(assetTracker.latestBalance).map(asset => (
+                            <Cell
+                              key={asset}
+                              fill={colors[asset]}
+                              asset={asset}
+                              currency={currency}
+                              balance={assetTracker.latestBalance[asset][currency]} />
                           ))
                         }
                       </Pie>
@@ -404,10 +414,10 @@ function App() {
                       <td>
                         {tx.note}
                       </td>
-                      <td className="text-right">
+                      <td className="text-right" style={{color: (colors[tx.asset] || colors.default)}}>
                         {tx.asset} {tx.amount}
                       </td>
-                      <td className="text-right">
+                      <td className="text-right" style={{color: (colors[tx.asset] || colors.default)}}>
                         {
                           new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(
                             getHistoricalValue(tx.amount, tx.asset, currency, tx.date, assetTracker.quotes)
@@ -451,7 +461,7 @@ function App() {
                           <th>{balance.date}</th>
                           {
                             assetTracker.assets.map(asset => (
-                              <td key={`${balance.date}-${asset}`} className="text-right">
+                              <td key={`${balance.date}-${asset}`} className="text-right" style={{color: (colors[asset] || colors.default)}}>
                                 <span className="text-muted" style={{marginRight: '1em'}}>
                                   {balance[asset][asset]}
                                 </span>
@@ -459,7 +469,7 @@ function App() {
                               </td>
                             ))
                           }
-                          <td className="text-right">
+                          <td className="text-right" style={{color: colors.total}}>
                             {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(balance.total[currency] || 0)}
                           </td>
                         </tr>
