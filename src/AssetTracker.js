@@ -180,12 +180,9 @@ export default class AssetTracker {
         this.assets = assets;
         this.quotes = quotes.map((quote) => {
             const quoteYesterday = quotes.find(candidate => ((candidate.coin === quote.coin) && (candidate.fiat === quote.fiat) && (candidate.date === moment.utc(quote.date).startOf('day').subtract(1, 'day').toISOString().slice(0, 10))))
-            const avgYesterday = (!!quoteYesterday) ? (BigNumber(quoteYesterday.open.amount).plus(BigNumber(quoteYesterday.close.amount)).dividedBy(BigNumber(2))).decimalPlaces(2).toNumber() : 0;
-            const avgToday = (BigNumber(quote.open.amount).plus(BigNumber(quote.close.amount)).dividedBy(BigNumber(2))).decimalPlaces(2).toNumber();
             return {
                 ...quote,
-                avg: avgToday,
-                change: (!!quoteYesterday) ? ((avgToday - avgYesterday) / avgYesterday * 100) : 0
+                change: (!!quoteYesterday) ? ((BigNumber(quote.close.amount).minus(BigNumber(quoteYesterday.close.amount))).dividedBy(BigNumber(quoteYesterday.close.amount)).times(100)) : 0
             };
         });
         this.todaysQuotes = Object.fromEntries(assets.map(asset => [
@@ -219,7 +216,7 @@ export default class AssetTracker {
                     {
                         ...Object.fromEntries(quotes.filter(quote => ((quote.coin === asset) && (quote.date === date))).map(quote => [
                             quote.fiat,
-                            balance.times(BigNumber(quote.open.amount).plus(BigNumber(quote.close.amount)).dividedBy(BigNumber(2))).decimalPlaces(2).toNumber() || BigNumber(0).toNumber()
+                            balance.times(BigNumber(quote.close.amount)).decimalPlaces(2).toNumber() || BigNumber(0).toNumber()
                         ])),
                         [asset]: balance.toNumber(),
                     }

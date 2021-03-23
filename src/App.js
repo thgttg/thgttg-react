@@ -262,8 +262,7 @@ function App() {
                       {
                         Object.keys(assetTracker.latestBalance).filter(asset => (asset !== 'total')).map(asset => (
                           <React.Fragment key={asset}>
-                            <td
-                              className="text-right">
+                            <td className="text-right">
                               {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(assetTracker.latestBalance[asset][currency].value)}
                             </td>
                             <td
@@ -286,7 +285,7 @@ function App() {
                           <React.Fragment key={asset}>
                             <td
                               className="text-right">
-                              {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(assetTracker.todaysQuotes[asset][currency].avg)}
+                              {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(assetTracker.todaysQuotes[asset][currency].close.amount)}
                             </td>
                             <td
                               style={{
@@ -300,6 +299,24 @@ function App() {
                       }
                     </tr>
                   </tbody>
+                  <tfoot>
+                    <tr>
+                      <th>price observation</th>
+                      {
+                        Object.keys(assetTracker.latestBalance).filter(asset => (asset !== 'total')).map(asset => ( // using latest balance keys in order to filter out quotes for assets we hold no balance for
+                          <React.Fragment key={asset}>
+                            <td colSpan="2" className="text-center">
+                              {
+                                moment.utc(assetTracker.todaysQuotes[asset][currency].close.time).format(moment.HTML5_FMT.TIME_SECONDS)
+                              } - {
+                                moment.utc(assetTracker.todaysQuotes[asset][currency].close.time).format('D MMM')
+                              }
+                            </td>
+                          </React.Fragment>
+                        ))
+                      }
+                    </tr>
+                  </tfoot>
                 </Table>
               )
             : (
