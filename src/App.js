@@ -246,10 +246,14 @@ function App() {
                       </td>
                       {
                         Object.keys(assetTracker.latestBalance).filter(asset => (asset !== 'total')).map(asset => (
-                          <th key={asset} fill={colors[asset]} colSpan="2" className="text-center">
-                            <Image src={`${asset}.png`} alt={`${asset} logo`} style={{height: '20px', width: '20px', marginRight: '1em'}} />
-                            {asset}
-                          </th>
+                          <React.Fragment key={asset}>
+                            <th className="text-right">
+                              <Image src={`${asset}.png`} alt={`${asset} logo`} style={{height: '20px', width: '20px'}} roundedCircle />
+                            </th>
+                            <th className="text-left" style={{ color: colors[asset] }}>
+                              {asset}
+                            </th>
+                          </React.Fragment>
                         ))
                       }
                     </tr>
@@ -262,7 +266,7 @@ function App() {
                       {
                         Object.keys(assetTracker.latestBalance).filter(asset => (asset !== 'total')).map(asset => (
                           <React.Fragment key={asset}>
-                            <td className="text-right">
+                            <td className="text-right" style={{ color: colors[asset] }}>
                               {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(assetTracker.latestBalance[asset][currency].value)}
                             </td>
                             <td
@@ -284,11 +288,16 @@ function App() {
                         Object.keys(assetTracker.latestBalance).filter(asset => (asset !== 'total')).map(asset => ( // using latest balance keys in order to filter out quotes for assets we hold no balance for
                           <React.Fragment key={asset}>
                             <td
-                              className="text-right">
+                              className="text-right"
+                              style={{
+                                color: colors[asset],
+                                width: `${(100 / Object.keys(assetTracker.latestBalance).length / 2)}%`
+                              }}>
                               {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(assetTracker.todaysQuotes[asset][currency].close.amount)}
                             </td>
                             <td
                               style={{
+                                width: `${(100 / Object.keys(assetTracker.latestBalance).length / 2)}%`,
                                 color: (assetTracker.todaysQuotes[asset][currency].change > 0) ? 'green' : (assetTracker.todaysQuotes[asset][currency].change < 0) ? 'red' : 'black'
                               }}>
                               <FontAwesomeIcon icon={["fas", (assetTracker.todaysQuotes[asset][currency].change > 0) ? 'caret-up' : (assetTracker.todaysQuotes[asset][currency].change < 0) ? 'caret-down' : 'circle']} />
@@ -305,12 +314,12 @@ function App() {
                       {
                         Object.keys(assetTracker.latestBalance).filter(asset => (asset !== 'total')).map(asset => ( // using latest balance keys in order to filter out quotes for assets we hold no balance for
                           <React.Fragment key={asset}>
-                            <td colSpan="2" className="text-center">
+                            <td colSpan="2" className="text-center" style={{ color: colors[asset] }}>
                               {
-                                moment.utc(assetTracker.todaysQuotes[asset][currency].close.time).format(moment.HTML5_FMT.TIME_SECONDS)
+                                moment.utc(assetTracker.todaysQuotes[asset][currency].close.time).format('MMMM Do').toLowerCase()
                               } - {
-                                moment.utc(assetTracker.todaysQuotes[asset][currency].close.time).format('D MMM')
-                              }
+                                moment.utc(assetTracker.todaysQuotes[asset][currency].close.time).format(moment.HTML5_FMT.TIME_SECONDS)
+                              } utc
                             </td>
                           </React.Fragment>
                         ))
@@ -384,7 +393,7 @@ function App() {
                       <Legend />
                       {
                         assetTracker.assets.map(asset => (
-                          <Line  yAxisId="left" type="monotone" name={`${asset}`} dataKey={`${asset}.${currency}`} dot={false} stroke={colors[asset] || colors['default']} key={asset} />
+                          <Line yAxisId="left" type="monotone" name={`${asset}`} dataKey={`${asset}.${currency}`} dot={false} stroke={colors[asset] || colors['default']} key={asset} />
                         ))
                       }
                       <Line yAxisId="right" type="monotone" name={`total`} dataKey={`total.${currency}`} strokeDasharray="5 5" dot={false} stroke={colors['total']} />
