@@ -253,10 +253,10 @@ export default class AssetTracker {
                 .then((response) => response.json())
                 .then((gist) => {
                     const transactions = Object.keys(gist.files)
-                        .filter(_filename => _filename.endsWith('.json'))
-                        .map(_filename => JSON.parse(gist.files[_filename].content))
-                        .reduce((accumulator, _transactions) => [...accumulator, ..._transactions])
-                        .filter(_transaction => Object.keys(coinUnitMap).includes(_transaction.asset))
+                        .filter(x => x.endsWith('.json'))
+                        .map(x => JSON.parse(gist.files[x].content).map(tx => ({ ...tx, vault: x.slice(0, -5) })))
+                        .reduce((acc, tx) => [...acc, ...tx])
+                        .filter(tx => Object.keys(coinUnitMap).includes(tx.asset))
                         .sort(dateSorter);
                     const assets = [...new Set(transactions.map(tx => tx.asset))];
                     const earliestDate = moment.utc(transactions[0].date).startOf('day').toISOString().slice(0, 10);

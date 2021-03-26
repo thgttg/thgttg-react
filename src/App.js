@@ -36,6 +36,7 @@ const colors = {
   eth: '#444eec',
   ksm: '#8015ab',
   ltc: '#345d9d',
+  uma: '#fe4b49',
   xlm: '#14b6e7',
   xrp: '#23292f',
   zec: '#ecb244',
@@ -94,7 +95,7 @@ const CustomToolTip = props => {
 const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, fill, asset, currency, balance }) => {
   const RADIAN = Math.PI / 180;
 
-  const radiusForCoinValueLabel = innerRadius + (outerRadius - innerRadius) * 1.5;
+  const radiusForCoinValueLabel = innerRadius + (outerRadius - innerRadius) * 2;
   const xForCoinValueLabel = cx + radiusForCoinValueLabel * Math.cos(-midAngle * RADIAN);
   const yForCoinValueLabel = cy + radiusForCoinValueLabel * Math.sin(-midAngle * RADIAN);
 
@@ -237,13 +238,13 @@ function App() {
                 <Table hover size="sm" style={{margin: '50px 10px 10px 10px'}}>
                   <thead>
                     <tr>
-                      <td>
-                        portfolio total: <strong>{new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(assetTracker.latestBalance.total[currency].value)}</strong>
+                      <th style={{ color: colors.total }}>
+                        {new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(assetTracker.latestBalance.total[currency].value)}
                         <span style={{ marginLeft: '1em', color: (assetTracker.latestBalance.total[currency].change.day > 0) ? 'green' : (assetTracker.latestBalance.total[currency].change.day < 0) ? 'red' : 'black' }}>
                           <FontAwesomeIcon icon={["fas", (assetTracker.latestBalance.total[currency].change.day > 0) ? 'caret-up' : (assetTracker.latestBalance.total[currency].change.day < 0) ? 'caret-down' : 'circle']} />
                           {assetTracker.latestBalance.total[currency].change.day.toFixed(2)}%
                         </span>
-                      </td>
+                      </th>
                       {
                         Object.keys(assetTracker.latestBalance).filter(asset => (asset !== 'total')).map(asset => (
                           <React.Fragment key={asset}>
@@ -410,13 +411,16 @@ function App() {
         <Table striped bordered hover size="sm" style={{margin: '50px 10px 10px 10px'}}>
           <thead>
             <tr>
-              <th colSpan="4" className="text-right">
+              <th colSpan="5" className="text-right">
                 transaction history
               </th>
             </tr>
             <tr>
               <th>
                 date
+              </th>
+              <th>
+                vault
               </th>
               <th>
                 note
@@ -436,6 +440,9 @@ function App() {
                     <tr key={key}>
                       <td>
                         {tx.date}
+                      </td>
+                      <td>
+                        {tx.vault}
                       </td>
                       <td>
                         {tx.note}
