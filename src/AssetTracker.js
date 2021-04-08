@@ -144,6 +144,15 @@ const coinUnitMap = {
             decimalPlaces: -1,
         },
     },
+    uma: {
+        monetary: {
+            unit: 'uma',
+        },
+        fractional: {
+            unit: 'unknown',
+            decimalPlaces: 18,
+        },
+    },
     xlm: {
         monetary: {
             unit: 'xlm',

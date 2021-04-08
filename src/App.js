@@ -14,6 +14,9 @@ import Row from 'react-bootstrap/Row';
 import Spinner from 'react-bootstrap/Spinner';
 import Table from 'react-bootstrap/Table';
 
+// react-markdown
+import ReactMarkdown from 'react-markdown';
+
 // recharts
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -131,10 +134,19 @@ function getHistoricalValue(amount, asset, currency, date, quotes) {
 }
 
 function App() {
+  const [footer, setFooter] = useState(undefined);
   const [dateRange, setDateRange] = useState({ from: moment.utc('2020-11-11').startOf('day'), to: moment.utc().endOf('day') });
   const [currency, setCurrency] = useState(cookies.get('currency') || 'eur');
   const [gistId, setGistId] = useState(window.location.href.match(/#[a-f0-9]{32}$/) ? window.location.href.split('#').pop() : cookies.get('gist') || '8272a8540d65584f16a2d3f6b9c34e4c');
   const [assetTracker, setAssetTracker] = useState(undefined);
+  useEffect(() => {
+    if(!footer) {
+      const footerUrl = (window.location.hostname === 'localhost')
+        ? `${window.location.protocol}//${window.location.hostname}:${window.location.port}/footer.md`
+        : 'https://thgttg.com/footer.md';
+      fetch(footerUrl).then(body => body.text()).then(setFooter).catch(console.error);
+    }
+  }, [footer]);
   useEffect(() => {
     if(!!currency && currency.match(/^[a-z]{3}$/) && cookies.get('currency') !== currency) {
       cookies.set('currency', currency, { path: '/' });
@@ -514,6 +526,20 @@ function App() {
             : null
         }
       </Row>
+      <Row>
+        <Col>
+          {
+            (!!footer)
+              ? (
+                  <ReactMarkdown source={footer} />
+                )
+              : (
+                  <Spinner animation="grow" />
+                )
+          }
+        </Col>
+      </Row>
+
     </Container>
   );
 }
