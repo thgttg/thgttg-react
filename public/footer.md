@@ -14,8 +14,8 @@ currently you have to create the gist json files matching the schema shown in th
 
 this page will store two cookies in your browser.
 
-* **currency** will hold the name of the fiat currency to show portfolio values in. its value changes whenever you use the currency selector at the top of the page.
-* **gist** will store the gist id of the last portfolio you viewed here so that you default to the same portfolio next time you visit the page.
+* the cookie named **currency** will hold the name of the fiat currency to show portfolio values in. its value changes whenever you use the currency selector at the top of the page.
+* the cookie named **gist** will store the gist id of the last portfolio you viewed here so that you default to the same portfolio next time you visit the page.
 
 #### privacy
 
