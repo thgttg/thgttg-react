@@ -2,11 +2,11 @@
 
 **thgttg** is an acronym for *the hodlers guide to the galaxy*.
 
-the source code for this page lives at [github.com/thgttg/thgttg-react](https://github.com/thgttg/thgttg-react). the page is hosted by github pages at [github.com/thgttg/thgttg.github.io](https://github.com/thgttg/thgttg.github.io)
+the source code for this page lives at [github.com/thgttg/thgttg-react](https://github.com/thgttg/thgttg-react). the page is hosted by github pages at [github.com/thgttg/thgttg.github.io](https://github.com/thgttg/thgttg.github.io).
 
 the app works by reading a github gist containing json files filled with transaction data.
 
-if you've arrived at this page without specifying a gist in the url or with a cookie from a previous visit, the page defaults to displaying the demo gist at [gist.github.com/8124c7d...](https://gist.github.com/8124c7dbcb6bdef3b81124ca974f635c)
+if you've arrived at this page without specifying a gist in the url or with a cookie from a previous visit, the page defaults to displaying the demo gist at [gist.github.com/8124c7d...](https://gist.github.com/8124c7dbcb6bdef3b81124ca974f635c).
 
 #### viewing other portfolios
 
