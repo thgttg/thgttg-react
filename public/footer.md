@@ -9,6 +9,7 @@ you can create your own portfolio page by exporting data from your crypto wallet
 currently you have to create the gist json files matching the schema shown in the demo gist. when i get around to implementing it, i'll make it possible to just use the csv format exposed by most exchange export functions.
 
 this page will store two cookies in your browser.
+
 * **currency** will hold the name of the fiat currency to show portfolio values in. its value changes whenever you use the currency selector at the top of the page.
 * **gist** will store the gist id of the last portfolio you viewed here so that you default to the same portfolio next time you visit the page.
 
